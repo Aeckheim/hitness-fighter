@@ -7,6 +7,129 @@ const Screens = {
     announceTimer: 0,
     announceText: '',
     winTimer: 0,
+    onlineCodeInput: '',
+
+    drawModeSelect(ctx, w, h) {
+        ctx.fillStyle = '#0a0a15';
+        ctx.fillRect(0, 0, w, h);
+        for (let y = 0; y < h; y += 3) {
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, y, w, 1);
+        }
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ccccff';
+        ctx.font = 'bold 20px monospace';
+        ctx.fillText('CHOOSE MODE', w / 2, h * 0.25);
+
+        // LOCAL
+        ctx.fillStyle = '#1a2a1a';
+        ctx.fillRect(w / 2 - 100, h * 0.38, 200, 45);
+        ctx.strokeStyle = '#44ff88';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(w / 2 - 100, h * 0.38, 200, 45);
+        ctx.fillStyle = '#44ff88';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText('1 - LOCAL', w / 2, h * 0.38 + 28);
+
+        // ONLINE
+        ctx.fillStyle = '#1a1a2a';
+        ctx.fillRect(w / 2 - 100, h * 0.58, 200, 45);
+        ctx.strokeStyle = '#4488ff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(w / 2 - 100, h * 0.58, 200, 45);
+        ctx.fillStyle = '#4488ff';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText('2 - ONLINE', w / 2, h * 0.58 + 28);
+
+        ctx.fillStyle = '#445566';
+        ctx.font = '8px monospace';
+        ctx.fillText('ESC - BACK', w / 2, h * 0.85);
+    },
+
+    drawLobby(ctx, w, h) {
+        ctx.fillStyle = '#0a0a15';
+        ctx.fillRect(0, 0, w, h);
+        for (let y = 0; y < h; y += 3) {
+            ctx.fillStyle = 'rgba(0,0,0,0.15)';
+            ctx.fillRect(0, y, w, 1);
+        }
+
+        ctx.textAlign = 'center';
+        ctx.fillStyle = '#ccccff';
+        ctx.font = 'bold 16px monospace';
+        ctx.fillText('ONLINE MATCH', w / 2, h * 0.12);
+
+        const status = Network.status;
+
+        if (!status) {
+            // Menu: Create or Join
+            ctx.fillStyle = '#1a2a1a';
+            ctx.fillRect(w / 2 - 120, h * 0.28, 240, 40);
+            ctx.strokeStyle = '#44ff88';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(w / 2 - 120, h * 0.28, 240, 40);
+            ctx.fillStyle = '#44ff88';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText('1 - RAUM ERSTELLEN', w / 2, h * 0.28 + 26);
+
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(w / 2 - 120, h * 0.45, 240, 40);
+            ctx.strokeStyle = '#4488ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(w / 2 - 120, h * 0.45, 240, 40);
+            ctx.fillStyle = '#4488ff';
+            ctx.fillText('2 - RAUM BEITRETEN', w / 2, h * 0.45 + 26);
+        } else if (status === 'creating' || status === 'waiting') {
+            ctx.fillStyle = '#44ff88';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText('DEIN RAUM-CODE:', w / 2, h * 0.32);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 36px monospace';
+            ctx.fillText(Network.roomCode, w / 2, h * 0.48);
+
+            ctx.fillStyle = '#667788';
+            ctx.font = '10px monospace';
+            const dots = '.'.repeat((Math.floor(Date.now() / 500) % 3) + 1);
+            ctx.fillText('Warte auf Gegner' + dots, w / 2, h * 0.62);
+        } else if (status === 'joining') {
+            ctx.fillStyle = '#4488ff';
+            ctx.font = 'bold 14px monospace';
+            ctx.fillText('RAUM-CODE EINGEBEN:', w / 2, h * 0.32);
+
+            // Input box
+            ctx.fillStyle = '#1a1a2a';
+            ctx.fillRect(w / 2 - 90, h * 0.40, 180, 45);
+            ctx.strokeStyle = '#4488ff';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(w / 2 - 90, h * 0.40, 180, 45);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 28px monospace';
+            const cursor = Math.sin(Date.now() * 0.005) > 0 ? '_' : ' ';
+            ctx.fillText(this.onlineCodeInput + cursor, w / 2, h * 0.40 + 32);
+
+            ctx.fillStyle = '#667788';
+            ctx.font = '9px monospace';
+            ctx.fillText('ENTER = Verbinden  |  BACKSPACE = Löschen', w / 2, h * 0.62);
+        } else if (status === 'connected') {
+            ctx.fillStyle = '#44ff88';
+            ctx.font = 'bold 16px monospace';
+            ctx.fillText('VERBUNDEN!', w / 2, h * 0.5);
+        } else if (status === 'error') {
+            ctx.fillStyle = '#ff4444';
+            ctx.font = 'bold 12px monospace';
+            ctx.fillText('FEHLER: ' + Network.errorMsg, w / 2, h * 0.45);
+            ctx.fillStyle = '#667788';
+            ctx.font = '10px monospace';
+            ctx.fillText('ESC - Zurück', w / 2, h * 0.58);
+        }
+
+        ctx.fillStyle = '#445566';
+        ctx.font = '8px monospace';
+        ctx.fillText('ESC - ZURÜCK', w / 2, h * 0.9);
+    },
 
     drawTitle(ctx, w, h) {
         this.titleTimer++;
@@ -164,11 +287,26 @@ const Screens = {
         // Instructions
         ctx.fillStyle = '#556677';
         ctx.font = '8px monospace';
-        ctx.fillText('P1: A/D to select, F to confirm    P2: LEFT/RIGHT to select, NUM1 to confirm', w / 2, h - 20);
-
-        // Ready indicators
-        ctx.fillStyle = '#667788';
-        ctx.font = '10px monospace';
+        if (Network.isOnline) {
+            ctx.fillText('A/D to select, F to confirm', w / 2, h - 20);
+            // Show confirmation status
+            ctx.fillStyle = '#667788';
+            ctx.font = '10px monospace';
+            if (Network.isHost) {
+                const p1Status = Game.p1Confirmed ? 'READY' : 'selecting...';
+                const p2Status = Game.remoteCharConfirmed ? 'READY' : 'selecting...';
+                ctx.fillStyle = Game.p1Confirmed ? '#44ff88' : '#667788';
+                ctx.fillText('P1 (Du): ' + p1Status, w / 2 - 80, h - 35);
+                ctx.fillStyle = Game.remoteCharConfirmed ? '#44ff88' : '#667788';
+                ctx.fillText('P2 (Online): ' + p2Status, w / 2 + 80, h - 35);
+            } else {
+                const p2Status = Game.p2Confirmed ? 'READY' : 'selecting...';
+                ctx.fillStyle = Game.p2Confirmed ? '#44ff88' : '#667788';
+                ctx.fillText('Du (P2): ' + p2Status, w / 2, h - 35);
+            }
+        } else {
+            ctx.fillText('P1: A/D to select, F to confirm    P2: LEFT/RIGHT to select, NUM1 to confirm', w / 2, h - 20);
+        }
     },
 
     drawAnnouncement(ctx, w, h, text) {
